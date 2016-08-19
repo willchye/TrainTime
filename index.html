@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <title>Train Schedule</title>
+    <link rel="stylesheet" href="assets/css/reset.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.css">
+    <link href='assets/css/employeedatastylesheet2.css' rel='stylesheet' type='text/css'>
+  </head>
+
+  <body>
+
+    <div class="jumbotron" id=gif>
+      <h1 id=forgif>Train Schedule</h1>
+      <p>A Comprehensive Schedule of Train Hours</p>
+    </div>
+    <div class="formbody">
+        <div class="panel panel-warning">
+          <div class="panel-heading">
+            <h3 class="panel-title"><strong>Current Train Schedule</strong></h3>
+          </div>
+    <form>
+    <div class="form-group">
+          <label for="text">Train Name:</label>
+          <input type="text" class="form-control" id="trainNameInput">
+    </div>
+
+    <div class="form-group">
+      <label for="text">Destination:</label>
+      <input type="text" class="form-control" id="destinationInput">
+    </div>
+    <div class="form-group">
+      <label for="text">First train time: (HH:mm)</label>
+      <input type="number" class="form-control" id="firstTrainInput">
+    </div>
+    <div class="form-group">
+      <label for="number">Frequency (min)</label>
+      <input type="text" class="form-control" id="frequencyInput">
+    </div>
+
+
+
+    <button type="submit" class="btn btn-default" id="addUser">Submit</button>
+        </form>
+        </span>
+      </div>
+    </div>
+
+<div class="formbody">
+    <div class="panel panel-warning">
+      <div class="panel-heading">
+        <h3 class="panel-title"><strong>Add Train</strong></h3>
+      </div>
+    <table class="table table-striped table-hover " id='employeeTable'>
+      <thead>
+        <tr>
+          <th>Train Name</th>
+          <th>Destination</th>
+          <th>Frequency</th>
+          <th>Next Arrival</th>
+          <th>Minutes Away</th>
+
+        </tr>
+      </thead>
+      <tbody>
+
+      </tbody>
+
+    </table>
+</div>
+</div>
+
+
+
+
+
+
+<script src="https://code.jquery.com/jquery.js"></script>
+
+<script src="https://cdn.jsdelivr.net/momentjs/2.14.1/moment.min.js"></script>
+
+<!-- LINK TO FIREBASE GOES HERE -->
+<script src="https://www.gstatic.com/firebasejs/live/3.0/firebase.js"></script>
+
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyD3-mlfQ-w77mRRpr3_wVhl5qK5MbGxG1k",
+    authDomain: "wills-firebase.firebaseapp.com",
+    databaseURL: "https://wills-firebase.firebaseio.com",
+    storageBucket: "wills-firebase.appspot.com",
+  };
+  firebase.initializeApp(config);
+
+
+// Create a variable to reference the database
+var database = firebase.database();
+
+// Capture Button Click
+$("#addUser").on("click", function() {
+
+
+var trainNameVal = $("#trainNameInput").val().trim();
+var destinationVal = $("#destinationInput").val().trim();
+var firstTrainVal = $("#firstTrainInput").val().trim();
+var frequencyVal = $("#frequencyInput").val().trim();
+
+
+
+//writing/set/save to firebase db, by creating an object with keypairs so can be called up later from database
+var newTrain = {
+ trainName: trainNameVal,
+ destination: destinationVal,
+ firstTrain: firstTrainVal,
+ frequency: frequencyVal,
+
+}
+
+
+
+
+//pushes entire object into firebase
+database.ref().push(newTrain);
+
+// Logs everything to console
+console.log(newTrain.trainName);
+console.log(newTrain.destination);
+console.log(newTrain.firstTrain);
+console.log(newTrain.frequency);
+
+// Alert
+alert("New train schedule successfully added");
+
+// Clears all of the text-boxes so can grab new user input data after first set pushes into firebase storage
+$("#trainNameInput").val("");
+$("#destinationInput").val("");
+$("#firstTrainInput").val("");
+$("#frequencyInput").val("");
+
+// Prevents moving to new page, stops default form function
+return false;
+});
+
+
+
+
+
+
+//test case - if train starts at 3:00am, current time is 3:16am, frequency is every 3 min. Next train will be 3:18am
+//math test case solution
+//minutes deduction 16 - 00 = 16 min differences
+//16 % 3 =1 (use modulus to find remainder), since it takes 5 intervals of (every 3 min), it will be at 3:15, 3:16-3:15 = 1
+//3-1 = 2 this means 2 minutes until next interval
+//2+ 3:16 = 3:18 (next arrival)
+
+
+//create function
+function trainArrival(hippo, cat){
+
+//conversions before any calculation starts.
+//first convert the first train time to a year ago (so computer knows its an older time, we don't want current time to be before first train
+  var firstTrainTimeConvert = moment(hippo,"hh:mm").subtract(1,"years");
+
+//current timevar
+ var currentTime = moment();
+
+ //actual calculation
+ //find out the difference between current time and the first train time
+  var diffTime = moment().diff(moment(firstTrainTimeConvert),"minutes");
+
+  //finding the remainder with modulus
+  var remainder = diffTime % cat;
+
+  //minutes until train with current time
+  minutesTilTrain = cat - remainder;
+
+  //next train calculation
+  nextTrain = moment().add(minutesTilTrain,"minutes");
+  nextTrainConvert = moment(nextTrain).format("hh:mm");
+}
+
+var minutesTilTrain;
+var nextTrain;
+
+
+
+//calls the database objects we pushed earlier, have to use on chil added to get each appended child object pushed
+database.ref().on("child_added", function(childSnapshot, prevChildKey){
+
+//bring out specific object keypair and set to variable
+  var trainNameNew = childSnapshot.val().trainName;
+  var destinationNew = childSnapshot.val().destination;
+  var firstTrainNew = childSnapshot.val().firstTrain;
+  var frequencyNew = childSnapshot.val().frequency;
+
+console.log(trainNameNew);
+console.log(firstTrainNew);
+
+  trainArrival(firstTrainNew, frequencyNew);
+
+$("#employeeTable > tbody").append("<tr><td>" + trainNameNew + "</td><td>" + destinationNew + "</td><td>" + frequencyNew + "</td><td>" + nextTrainConvert +"</td><td>" + minutesTilTrain + "</td><td>");
+});
+
+
+</script>
+
+
+  </body>
+</html>

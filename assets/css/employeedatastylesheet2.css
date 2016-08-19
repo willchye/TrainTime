@@ -1,0 +1,14 @@
+.formbody{
+  width:75%;
+  margin:0 auto;
+}
+#gif{
+  background-image:url(http://i.giphy.com/YXwmthHTL0EgM.gif);
+  background-repeat: no-repeat;
+   background-position: center;
+   text-align:center;
+   color:black;
+}
+#forgif{
+  color:#d1840f;
+}
